@@ -56,7 +56,7 @@
     const message = document.getElementById('message').value.trim();
     if(!name || !phone){ return; }
     const text = `Hello Ram Krishna Homeo Hall & Clinic,%0A%0AI would like to enquire about a consultation.%0A%0AName: ${encodeURIComponent(name)}%0APhone: ${encodeURIComponent(phone)}%0APreferred date: ${encodeURIComponent(date || 'Not specified')}%0AMessage: ${encodeURIComponent(message || 'None')}`;
-    const waUrl = `https://wa.me/910000000000?text=${text}`;
+    const waUrl = `https://wa.me/917765971510?text=${text}`;
     window.open(waUrl, '_blank', 'noopener');
     success.classList.add('show');
   });
