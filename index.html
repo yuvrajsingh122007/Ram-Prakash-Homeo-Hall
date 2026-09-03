@@ -24,7 +24,7 @@
   <!-- Utility bar -->
   <div class="utility-bar">
     <div class="container">
-      <span>Open Mon–Sat, 10:00 AM – 8:00 PM</span>
+      <span>Open Mon–Sun, 8:00 AM – 8:00 PM</span>
       <a href="https://wa.me/917765971510" target="_blank" rel="noopener">Chat with us on WhatsApp →</a>
     </div>
   </div>
@@ -277,9 +277,9 @@
             <p class="role">BHMS · Registered Homeopathic Practitioner</p>
             <div class="doctor-meta">
               <div><strong>Qualification</strong><span>BHMS</span></div>
-              <div><strong>Registration No.</strong><span>To be confirmed by clinic</span></div>
+              <div><strong>Registration No.</strong><span>BR/3447/21</span></div>
               <div><strong>Experience</strong><span>25+ Years</span></div>
-              <div><strong>Consultation hours</strong><span>Mon–Sat, 10 AM – 8 PM</span></div>
+              <div><strong>Consultation hours</strong><span>Mon–Sun, 8 AM – 8 PM</span></div>
             </div>
             <p class="bio">Every consultation begins with listening — a full picture of symptoms, history and lifestyle
               before any treatment is suggested. Final biography, qualifications and registration details will be added
@@ -601,36 +601,57 @@
             </div>
           </div>
 
-          <form class="card form-card" id="enquiryForm" validate>
+          <form class="card form-card" id="enquiryForm">
+
             <div class="field">
               <label for="name">Name</label>
-              <input type="text" id="name" name="name" required />
+              <input type="text" id="name" name="name" autocomplete="name" required />
             </div>
+
             <div class="field">
               <label for="phone">Phone Number</label>
-              <input type="tel" id="phone" name="phone" required />
+              <input type="tel" id="phone" name="phone" autocomplete="tel" inputmode="tel" required />
             </div>
+
             <div class="field">
               <label for="date">Preferred Date</label>
               <input type="date" id="date" name="date" />
             </div>
+
             <div class="field">
               <label for="message">Message</label>
               <textarea id="message" name="message" placeholder="Tell us briefly what you'd like to discuss"></textarea>
             </div>
-            <button type="submit" class="btn btn-primary" style="width:100%;">Send Enquiry</button>
-            <p class="form-note">Submitting this form opens WhatsApp with your details pre-filled — nothing is stored on
-              this website. Please avoid sharing sensitive medical information here.</p>
-            <div id="formSuccess">Your message is ready in WhatsApp — please tap send there to reach the clinic.</div>
+
+            <button type="submit" class="btn btn-primary" style="width:100%;">
+              Send Enquiry →
+            </button>
+
+            <p class="form-note">
+              Your enquiry will open in WhatsApp with the details you entered.
+              Please review the message and tap Send in WhatsApp. Avoid sharing
+              sensitive medical information in this form.
+            </p>
+
+            <div id="formSuccess">
+              Your enquiry is ready in WhatsApp. Please tap Send to contact the clinic.
+            </div>
+
           </form>
+
         </div>
 
-        <div class="map-embed" id="map">
-          <iframe title="Clinic location map" loading="lazy"
-            src="https://www.google.com/maps?q=homeopathic+clinic&output=embed"></iframe>
-          <a href="https://maps.app.goo.gl/g8MVXvhVFd1rdqQi9" target="_blank" rel="noopener" class="btn btn-primary map-cta">Open in
-            Google Maps</a>
+        <div class="map-embed" id="map">                                                       <!--Helps to locate Exact location of a clinic-->
+          <iframe title="Ram Krishna Homeo Hall & Clinic location" loading="lazy"
+            src="https://www.google.com/maps?q=26.1007141,84.805368&z=17&output=embed" allowfullscreen>
+          </iframe>
+
+          <a href="https://maps.app.goo.gl/12VGLpxTmTaNbQEP6" target="_blank" rel="noopener"
+            class="btn btn-primary map-cta">
+            Open in Google Maps
+          </a>
         </div>
+
       </div>
     </section>
 
@@ -677,7 +698,7 @@
         <div>
           <h4>Contact</h4>
           <ul>
-            <li><a href="tel:+917765971510">+91 00000 00000</a></li>
+            <li><a href="tel:+917765971510">Phone</a></li>
             <li><a href="https://wa.me/917765971510">WhatsApp</a></li>
             <li><a href="#map">Get Directions</a></li>
             <li><a href="#contact">Send Enquiry</a></li>
@@ -709,7 +730,7 @@
       </svg>
       WhatsApp
     </a>
-    <a href="#map">
+    <a href="https://maps.app.goo.gl/12VGLpxTmTaNbQEP6" target ="_blank">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
         <circle cx="12" cy="10" r="3" />
