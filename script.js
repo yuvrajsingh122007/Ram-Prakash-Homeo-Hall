@@ -1,51 +1,45 @@
 document.addEventListener('DOMContentLoaded', () => {
+  const $ = (selector, scope = document) => scope.querySelector(selector);
+  const $$ = (selector, scope = document) => [...scope.querySelectorAll(selector)];
+
+  const lockBody = () => document.body.classList.add('no-scroll');
+
+  const unlockBody = () => {
+    if (
+      !$('#mobileMenu.open') &&
+      !$('#lightbox.open') &&
+      !$('#enquiryModal.open')
+    ) {
+      document.body.classList.remove('no-scroll');
+    }
+  };
 
   /* =========================================
      MOBILE MENU
   ========================================= */
 
-  const menuBtn = document.getElementById('menuBtn');
-  const closeMenuBtn = document.getElementById('closeMenuBtn');
-  const mobileMenu = document.getElementById('mobileMenu');
+  const menuBtn = $('#menuBtn');
+  const closeMenuBtn = $('#closeMenuBtn');
+  const mobileMenu = $('#mobileMenu');
 
-  function openMenu() {
+  const setMenu = open => {
     if (!mobileMenu || !menuBtn) return;
 
-    mobileMenu.classList.add('open');
-    mobileMenu.setAttribute('aria-hidden', 'false');
-    menuBtn.setAttribute('aria-expanded', 'true');
+    mobileMenu.classList.toggle('open', open);
+    mobileMenu.setAttribute('aria-hidden', String(!open));
+    menuBtn.setAttribute('aria-expanded', String(open));
 
-    document.body.style.overflow = 'hidden';
-  }
+    open ? lockBody() : unlockBody();
 
-  function closeMenu() {
-    if (!mobileMenu || !menuBtn) return;
+    (open ? closeMenuBtn : menuBtn)?.focus();
+  };
 
-    mobileMenu.classList.remove('open');
-    mobileMenu.setAttribute('aria-hidden', 'true');
-    menuBtn.setAttribute('aria-expanded', 'false');
+  menuBtn?.addEventListener('click', () => setMenu(true));
 
-    document.body.style.overflow = '';
-  }
+  closeMenuBtn?.addEventListener('click', () => setMenu(false));
 
-  if (menuBtn) {
-    menuBtn.addEventListener('click', openMenu);
-  }
-
-  if (closeMenuBtn) {
-    closeMenuBtn.addEventListener('click', closeMenu);
-  }
-
-  // Close mobile menu when a navigation link is clicked
-  document.querySelectorAll('#mobileMenu .nav-link').forEach(link => {
-    link.addEventListener('click', closeMenu);
-  });
-
-  // Close mobile menu with Escape
-  document.addEventListener('keydown', event => {
-    if (event.key === 'Escape') {
-      closeMenu();
-    }
+  $$('#mobileMenu .nav-link').forEach(link => {
+    link.addEventListener('click', () => setMenu(false));
   });
 
 
@@ -53,35 +47,40 @@ document.addEventListener('DOMContentLoaded', () => {
      FAQ ACCORDION
   ========================================= */
 
-  const faqItems = document.querySelectorAll('.faq-item');
+  const faqItems = $$('.faq-item');
 
-  faqItems.forEach(item => {
-    const question = item.querySelector('.faq-q');
+  faqItems.forEach((item, index) => {
+    const question = $('.faq-q', item);
+    const answer = $('.faq-a', item);
 
-    if (!question) return;
+    if (!question || !answer) return;
 
+    const answerId = `faq-answer-${index + 1}`;
+
+    answer.id = answerId;
+
+    question.type = 'button';
+    question.setAttribute('aria-controls', answerId);
     question.setAttribute('aria-expanded', 'false');
 
     question.addEventListener('click', () => {
+      const willOpen = !item.classList.contains('open');
 
-      const isCurrentlyOpen = item.classList.contains('open');
+      faqItems.forEach(other => {
+        other.classList.remove('open');
 
-      // Close all FAQ items
-      faqItems.forEach(otherItem => {
-        otherItem.classList.remove('open');
-
-        const otherQuestion = otherItem.querySelector('.faq-q');
-
-        if (otherQuestion) {
-          otherQuestion.setAttribute('aria-expanded', 'false');
-        }
+        $('.faq-q', other)?.setAttribute(
+          'aria-expanded',
+          'false'
+        );
       });
 
-      // Open clicked item
-      if (!isCurrentlyOpen) {
-        item.classList.add('open');
-        question.setAttribute('aria-expanded', 'true');
-      }
+      item.classList.toggle('open', willOpen);
+
+      question.setAttribute(
+        'aria-expanded',
+        String(willOpen)
+      );
     });
   });
 
@@ -90,217 +89,217 @@ document.addEventListener('DOMContentLoaded', () => {
      GALLERY LIGHTBOX
   ========================================= */
 
-  const galleryItems = Array.from(
-    document.querySelectorAll('.gallery-item')
-  );
-
-  const lightbox = document.getElementById('lightbox');
-  const lightboxImage = document.getElementById('lbImage');
-  const lightboxCaption = document.getElementById('lbCaption');
-
-  const closeLightboxBtn = document.getElementById('lbClose');
-  const previousBtn = document.getElementById('lbPrev');
-  const nextBtn = document.getElementById('lbNext');
+  const galleryItems = $$('.gallery-item');
+  const lightbox = $('#lightbox');
+  const lightboxImage = $('#lbImage');
+  const lightboxCaption = $('#lbCaption');
+  const lbClose = $('#lbClose');
 
   let currentImageIndex = 0;
+  let lastGalleryTrigger = null;
 
-  function showImage(index) {
-
-    if (!galleryItems.length) return;
+  const showImage = index => {
+    if (!galleryItems.length || !lightboxImage) return;
 
     currentImageIndex =
       (index + galleryItems.length) % galleryItems.length;
 
     const item = galleryItems[currentImageIndex];
-    const image = item.querySelector('img');
+    const image = $('img', item);
 
     if (!image) return;
 
-    lightboxImage.src = image.src;
-    lightboxImage.alt = image.alt || '';
+    lightboxImage.src =
+      image.currentSrc || image.src;
 
-    const caption = item.dataset.caption || '';
-    const category = item.dataset.cat || '';
+    lightboxImage.alt =
+      image.alt || '';
 
-    lightboxCaption.textContent =
-      category ? `${caption} — ${category}` : caption;
-  }
+    const caption =
+      item.dataset.caption || '';
 
-  function openLightbox(index) {
+    const category =
+      item.dataset.cat || '';
 
+    if (lightboxCaption) {
+      lightboxCaption.textContent =
+        category
+          ? `${caption} — ${category}`
+          : caption;
+    }
+  };
+
+
+  const openLightbox = index => {
     if (!lightbox) return;
+
+    lastGalleryTrigger =
+      galleryItems[index];
 
     showImage(index);
 
     lightbox.classList.add('open');
 
-    document.body.style.overflow = 'hidden';
+    lightbox.setAttribute(
+      'aria-hidden',
+      'false'
+    );
 
-    if (closeLightboxBtn) {
-      closeLightboxBtn.focus();
-    }
-  }
+    lockBody();
 
-  function closeLightbox() {
+    lbClose?.focus();
+  };
 
+
+  const closeLightbox = () => {
     if (!lightbox) return;
 
     lightbox.classList.remove('open');
 
-    document.body.style.overflow = '';
+    lightbox.setAttribute(
+      'aria-hidden',
+      'true'
+    );
 
-    // Stop image loading when closed
     if (lightboxImage) {
       lightboxImage.src = '';
     }
-  }
+
+    unlockBody();
+
+    lastGalleryTrigger?.focus();
+  };
+
 
   galleryItems.forEach((item, index) => {
+    item.tabIndex = 0;
+    item.setAttribute('role', 'button');
+
+    item.setAttribute(
+      'aria-label',
+      `Open image: ${
+        item.dataset.caption ||
+        `Gallery image ${index + 1}`
+      }`
+    );
+
 
     item.addEventListener('click', () => {
       openLightbox(index);
     });
 
-    // Keyboard accessibility
-    item.setAttribute('tabindex', '0');
 
     item.addEventListener('keydown', event => {
-
-      if (event.key === 'Enter' || event.key === ' ') {
+      if (
+        event.key === 'Enter' ||
+        event.key === ' '
+      ) {
         event.preventDefault();
         openLightbox(index);
       }
-
     });
   });
 
-  if (closeLightboxBtn) {
-    closeLightboxBtn.addEventListener('click', closeLightbox);
-  }
 
-  if (previousBtn) {
-    previousBtn.addEventListener('click', () => {
-      showImage(currentImageIndex - 1);
-    });
-  }
+  lbClose?.addEventListener(
+    'click',
+    closeLightbox
+  );
 
-  if (nextBtn) {
-    nextBtn.addEventListener('click', () => {
-      showImage(currentImageIndex + 1);
-    });
-  }
 
-  // Close by clicking outside the image
-  if (lightbox) {
-    lightbox.addEventListener('click', event => {
+  $('#lbPrev')?.addEventListener(
+    'click',
+    () => showImage(currentImageIndex - 1)
+  );
 
-      if (event.target === lightbox) {
-        closeLightbox();
-      }
 
-    });
-  }
+  $('#lbNext')?.addEventListener(
+    'click',
+    () => showImage(currentImageIndex + 1)
+  );
 
-  // Lightbox keyboard controls
-  document.addEventListener('keydown', event => {
 
-    if (!lightbox || !lightbox.classList.contains('open')) {
-      return;
-    }
-
-    if (event.key === 'Escape') {
+  lightbox?.addEventListener('click', event => {
+    if (event.target === lightbox) {
       closeLightbox();
     }
-
-    if (event.key === 'ArrowLeft') {
-      showImage(currentImageIndex - 1);
-    }
-
-    if (event.key === 'ArrowRight') {
-      showImage(currentImageIndex + 1);
-    }
-
   });
 
 
   /* =========================================
-     CONTACT FORM → WHATSAPP
+     DATE INPUT
   ========================================= */
 
-  const form = document.getElementById('enquiryForm');
-  const successMessage = document.getElementById('formSuccess');
+  const dateInput = $('#date');
 
-  if (form) {
+  if (dateInput) {
+    const today = new Date();
 
-    form.addEventListener('submit', event => {
+    const localDate = new Date(
+      today.getTime() -
+      today.getTimezoneOffset() * 60000
+    );
 
-      event.preventDefault();
+    dateInput.min =
+      localDate.toISOString().split('T')[0];
+  }
 
-      const name =
-        document.getElementById('name')?.value.trim() || '';
 
-      const phone =
-        document.getElementById('phone')?.value.trim() || '';
+  /* =========================================
+     PHONE INPUT
+  ========================================= */
 
-      const date =
-        document.getElementById('date')?.value || '';
+  const phoneInput = $('#phone');
 
-      const message =
-        document.getElementById('message')?.value.trim() || '';
+  phoneInput?.addEventListener('input', () => {
+    phoneInput.value =
+      phoneInput.value.replace(
+        /[^\d+\-\s()]/g,
+        ''
+      );
+  });
 
-      /* -----------------------------
-         Validation
-      ----------------------------- */
 
-      if (!name) {
-        alert('Please enter your name.');
-        document.getElementById('name')?.focus();
-        return;
+  /* =========================================
+     ENQUIRY FORM
+  ========================================= */
+
+  const form = $('#enquiryForm');
+  const successMessage = $('#formSuccess');
+  const enquiryModal = $('#enquiryModal');
+  const modalClose = $('#enquiryModalClose');
+
+  let enquiryData = null;
+  let lastModalTrigger = null;
+
+
+  const formatDate = date => {
+    if (!date) return 'Not specified';
+
+    const parsed =
+      new Date(`${date}T00:00:00`);
+
+    if (Number.isNaN(parsed.getTime())) {
+      return 'Not specified';
+    }
+
+    return parsed.toLocaleDateString(
+      'en-IN',
+      {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric'
       }
-
-      if (!phone) {
-        alert('Please enter your phone number.');
-        document.getElementById('phone')?.focus();
-        return;
-      }
-
-      // Basic Indian phone number validation
-      const cleanPhone = phone.replace(/\D/g, '');
-
-      if (cleanPhone.length < 10) {
-        alert('Please enter a valid phone number.');
-        document.getElementById('phone')?.focus();
-        return;
-      }
+    );
+  };
 
 
-      /* -----------------------------
-         Format preferred date
-      ----------------------------- */
-
-      let formattedDate = 'Not specified';
-
-      if (date) {
-
-        const selectedDate = new Date(date + 'T00:00:00');
-
-        formattedDate = selectedDate.toLocaleDateString(
-          'en-IN',
-          {
-            day: '2-digit',
-            month: 'long',
-            year: 'numeric'
-          }
-        );
-      }
-
-
-      /* -----------------------------
-         Create WhatsApp message
-      ----------------------------- */
-
-      const whatsappMessage =
-`Hello Ram Krishna Homeo Hall & Clinic,
+  const createEnquiryMessage = ({
+    name,
+    phone,
+    formattedDate,
+    message
+  }) => `Hello Ram Krishna Homeo Hall & Clinic,
 
 I would like to enquire about a consultation.
 
@@ -312,86 +311,253 @@ Message: ${message || 'None'}
 Thank you.`;
 
 
-      /* -----------------------------
-         Encode entire message ONCE
-      ----------------------------- */
+  /* =========================================
+     ENQUIRY MODAL
+  ========================================= */
 
-      const encodedMessage =
-        encodeURIComponent(whatsappMessage);
+  const setModal = open => {
+    if (!enquiryModal) return;
+
+    enquiryModal.classList.toggle(
+      'open',
+      open
+    );
+
+    enquiryModal.setAttribute(
+      'aria-hidden',
+      String(!open)
+    );
+
+    open ? lockBody() : unlockBody();
+
+    if (open) {
+      lastModalTrigger =
+        document.activeElement;
+
+      modalClose?.focus();
+    } else {
+      lastModalTrigger?.focus?.();
+    }
+  };
 
 
-      /* -----------------------------
-         Clinic WhatsApp number
-      ----------------------------- */
+  const showSuccess = text => {
+    if (!successMessage) return;
 
-      const whatsappNumber = '917765971510';
+    successMessage.textContent = text;
 
-
-      /* -----------------------------
-         Create WhatsApp URL
-      ----------------------------- */
-
-      const whatsappURL =
-        `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
+    successMessage.classList.add('show');
+  };
 
 
-      /* -----------------------------
-         Open WhatsApp
-      ----------------------------- */
+  /* =========================================
+     FORM SUBMISSION
+  ========================================= */
 
-      window.open(whatsappURL, '_blank');
+  form?.addEventListener(
+    'submit',
+    event => {
+      event.preventDefault();
+
+      if (!form.reportValidity()) return;
+
+      const data =
+        new FormData(form);
+
+      const name =
+        String(data.get('name') || '').trim();
+
+      const phone =
+        String(data.get('phone') || '').trim();
+
+      const date =
+        String(data.get('date') || '');
+
+      const message =
+        String(data.get('message') || '').trim();
+
+      const cleanPhone =
+        phone.replace(/\D/g, '');
 
 
-      /* -----------------------------
-         Show success message
-      ----------------------------- */
+      if (
+        cleanPhone.length < 10 ||
+        cleanPhone.length > 15
+      ) {
+        phoneInput?.setCustomValidity(
+          'Please enter a valid phone number.'
+        );
 
-      if (successMessage) {
-        successMessage.classList.add('show');
+        phoneInput?.reportValidity();
+        phoneInput?.focus();
+
+        return;
       }
 
-    });
 
-  }
+      phoneInput?.setCustomValidity('');
+
+
+      enquiryData = {
+        name,
+        phone,
+        date,
+        formattedDate: formatDate(date),
+        message
+      };
+
+
+      setModal(true);
+    }
+  );
+
+
+  phoneInput?.addEventListener(
+    'input',
+    () => phoneInput.setCustomValidity('')
+  );
 
 
   /* =========================================
-     SET MINIMUM DATE FOR APPOINTMENT
+     SEND VIA WHATSAPP
   ========================================= */
 
-  const dateInput = document.getElementById('date');
+  $('#sendWhatsApp')?.addEventListener(
+    'click',
+    () => {
+      if (!enquiryData) return;
 
-  if (dateInput) {
-
-    // Prevent selecting a date in the past
-    const today = new Date();
-
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-
-    dateInput.min = `${year}-${month}-${day}`;
-  }
+      const url =
+        `https://wa.me/917765971510?text=${
+          encodeURIComponent(
+            createEnquiryMessage(enquiryData)
+          )
+        }`;
 
 
-  /* =========================================
-     PHONE NUMBER INPUT
-  ========================================= */
+      setModal(false);
 
-  const phoneInput = document.getElementById('phone');
-
-  if (phoneInput) {
-
-    phoneInput.addEventListener('input', () => {
-
-      // Keep numbers, spaces, +, -, and parentheses
-      phoneInput.value = phoneInput.value.replace(
-        /[^0-9+\-\s()]/g,
-        ''
+      window.open(
+        url,
+        '_blank',
+        'noopener,noreferrer'
       );
 
-    });
 
-  }
+      showSuccess(
+        'Your enquiry is ready in WhatsApp. Review it and tap Send to contact the clinic.'
+      );
+    }
+  );
 
+
+  /* =========================================
+     SEND VIA EMAIL
+  ========================================= */
+
+  $('#sendEmail')?.addEventListener(
+    'click',
+    () => {
+      if (!enquiryData) return;
+
+      const subject =
+        'Consultation Enquiry - Ram Krishna Homeo Hall & Clinic';
+
+      const body =
+        createEnquiryMessage(enquiryData);
+
+
+      setModal(false);
+
+
+      window.location.href =
+        `mailto:ramkrishnahomeo@gmail.com?subject=${
+          encodeURIComponent(subject)
+        }&body=${
+          encodeURIComponent(body)
+        }`;
+
+
+      showSuccess(
+        'Your email draft is ready. Review it and tap Send.'
+      );
+    }
+  );
+
+
+  /* =========================================
+     CLOSE ENQUIRY MODAL
+  ========================================= */
+
+  modalClose?.addEventListener(
+    'click',
+    () => setModal(false)
+  );
+
+
+  $('#enquiryCancel')?.addEventListener(
+    'click',
+    () => setModal(false)
+  );
+
+
+  $('#enquiryModalBackdrop')?.addEventListener(
+    'click',
+    () => setModal(false)
+  );
+
+
+  /* =========================================
+     GLOBAL KEYBOARD CONTROLS
+  ========================================= */
+
+  document.addEventListener(
+    'keydown',
+    event => {
+
+      if (event.key === 'Escape') {
+
+        if (
+          enquiryModal?.classList.contains('open')
+        ) {
+          return setModal(false);
+        }
+
+
+        if (
+          lightbox?.classList.contains('open')
+        ) {
+          return closeLightbox();
+        }
+
+
+        if (
+          mobileMenu?.classList.contains('open')
+        ) {
+          return setMenu(false);
+        }
+      }
+
+
+      if (
+        !lightbox?.classList.contains('open')
+      ) {
+        return;
+      }
+
+
+      if (event.key === 'ArrowLeft') {
+        showImage(
+          currentImageIndex - 1
+        );
+      }
+
+
+      if (event.key === 'ArrowRight') {
+        showImage(
+          currentImageIndex + 1
+        );
+      }
+    }
+  );
 });
